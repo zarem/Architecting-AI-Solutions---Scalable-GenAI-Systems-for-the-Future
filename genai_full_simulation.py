@@ -194,7 +194,8 @@ async def summarize_document(encrypted_document):
 
     # Use GPT-3 to summarize the document
     summary = gpt3_summarize(document)
-    logging.info(f"Summary: {summary}\n")
+    #logging.info(f"Summary: {summary}\n")
+    print(f"\nSummary:\n{summary}\n")
 
     # Simulate feedback loop (Loop)
     await gather_feedback(summary)
