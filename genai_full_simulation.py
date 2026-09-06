@@ -7,12 +7,7 @@ import hashlib
 import secrets
 from cryptography.fernet import Fernet  # pip install cryptography
 
-#MZ
-#from openai import OpenAI
-#load_dotenv()
-
 # must do pip install python-dotenv, openai, and sqlite3
-
 # Set up logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
 
@@ -56,7 +51,6 @@ def encrypt_document(document):
     encrypted_doc = cipher_suite.encrypt(document.encode())
     return encrypted_doc
 
-
 # Decrypt a document
 # === Infrastructure Layer: Decrypt a document
 
@@ -95,34 +89,10 @@ def gpt3_summarize(document, num_sentences=3):
     top = sorted(heapq.nlargest(num_sentences, scores, key=scores.get))
     return " ".join(sents[i] for i in top)
 
-# GPT-3 Summarization Function
-# === Model Layer: GPT-3 Summarization Function using OpenAI API
-
-
-#def gpt3_summarize(text):
-   # print("Summarizing document using GPT-3...")
-    #client = OpenAI()
-    #response = client.chat.completions.create(
-        #model="gpt-3.5-turbo",
-        #messages=[
-           # {"role": "system", "content": "please summarize the following text:"},
-           # {"role": "user", "content": text},
-        #],
-        #max_tokens=150,
-        #temperature=0.7,
-    #)
-    #summary = response.choices[0].message.content
-    # summary = response.choices[0].text.strip()
-    #return summary
-
-
-# User login with token-based authentication (Application Layer)
-# ==== Application Layer: User login with token-based authentication
-
 
 async def login():
     username = input("Username: ")
-    password = hashlib.sha256(input("Password: ").encode()).hexdigest()
+    password = hashlib.sha256(input("Password 🗝️: ").encode()).hexdigest()
 
     cursor.execute(
         "SELECT role FROM users WHERE username = ? AND password = ?",
@@ -135,7 +105,7 @@ async def login():
         logging.info(f"User {username} authenticated successfully with token {token}")
         return username, result[0], token
     else:
-        logging.error("Invalid credentials!")
+        logging.error("❗️Invalid credentials!")
         return None, None, None
 
 
@@ -177,7 +147,7 @@ async def upload_document(role, token):
             # Real-time processing (Pipeline)
             # === Pipeline: Real-time processing for free users ===
 
-            print("Document uploaded for real-time processing....")
+            print("Document uploaded for real-time processing ⏳....")
             await summarize_document(encrypted_document)
         else:
             # Batch processing (Pipeline)
@@ -195,7 +165,9 @@ async def summarize_document(encrypted_document):
     # Use GPT-3 to summarize the document
     summary = gpt3_summarize(document)
     #logging.info(f"Summary: {summary}\n")
-    print(f"\nSummary:\n{summary}\n")
+    print(f"\nSummary📝:")   
+    print(textwrap.fill(summary, width=80))
+    print()
 
     # Simulate feedback loop (Loop)
     await gather_feedback(summary)
@@ -205,7 +177,7 @@ async def summarize_document(encrypted_document):
 # ===== Loop: Gather feedback from the user to simulate model improvement ===
 async def gather_feedback(summary):
     print("\nHow was the summary?")
-    feedback = input("Enter feedback (good/bad): ").lower()
+    feedback = input("Enter feedback (good 👍/bad 👎): ").lower()
     if feedback not in ["good", "bad"]:
         logging.error("Invalid feedback!")
     else:
@@ -250,7 +222,6 @@ async def main():
 
 
 # Run the simulation
-# asyncio.run(main())
 await main()
 
 
