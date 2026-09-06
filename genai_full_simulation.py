@@ -8,11 +8,14 @@ import sqlite3
 import textwrap
 
 from cryptography.fernet import Fernet
+from google.colab import userdata
+from openai import OpenAI
 
 
 DOCUMENT_PATH = "./data/i-have-a-dream.txt"
 FREE_USER_SIZE_LIMIT = 10_240
 SUMMARY_LINE_WIDTH = 80
+USE_GEMINI = True
 
 STOP_WORDS = set(
     """a an the and or but if while of to in on at by for with about against
@@ -106,6 +109,34 @@ def gpt3_summarize(document, num_sentences=3):
     return " ".join(sentences[index] for index in top_indexes)
 
 
+def gemini_summarize(document):
+    """Summarize a document using Google's hosted Gemini model."""
+    api_key = userdata.get("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError(
+            "GEMINI_API_KEY is missing. Add it to Colab Secrets and enable "
+            "notebook access."
+        )
+
+    client = OpenAI(
+        api_key=api_key,
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    )
+    response = client.chat.completions.create(
+        model="gemini-3.8-flash",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "Summarize the following document in three concise sentences."
+                ),
+            },
+            {"role": "user", "content": document},
+        ],
+    )
+    return response.choices[0].message.content
+
+
 async def login():
     """Authenticate a simulated user and return the assigned role."""
     username = input("Username: ")
@@ -160,7 +191,13 @@ async def upload_document(role, token):
 async def summarize_document(encrypted_document):
     """Decrypt, summarize, display, and collect feedback."""
     document = decrypt_document(encrypted_document)
-    summary = gpt3_summarize(document)
+
+    if USE_GEMINI:
+        print("🌐 Summarizing with Gemini...")
+        summary = gemini_summarize(document)
+    else:
+        print("💻 Summarizing with the local model...")
+        summary = gpt3_summarize(document)
 
     print("\n📝 Summary:")
     print(textwrap.fill(summary, width=SUMMARY_LINE_WIDTH))
