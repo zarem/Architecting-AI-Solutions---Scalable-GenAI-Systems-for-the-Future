@@ -249,7 +249,8 @@ async def main():
 
 
 # Run the simulation
-asyncio.run(main())
+# asyncio.run(main())
+await main()
 
 
 # Print feedback data for debugging (Loop to improve model later)
