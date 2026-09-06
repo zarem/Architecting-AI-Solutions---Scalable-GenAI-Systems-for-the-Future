@@ -7,11 +7,9 @@ import hashlib
 import secrets
 from cryptography.fernet import Fernet  # pip install cryptography
 
-
-from openai import OpenAI
-
-
-load_dotenv()
+#MZ
+#from openai import OpenAI
+#load_dotenv()
 
 # must do pip install python-dotenv, openai, and sqlite3
 
@@ -68,26 +66,54 @@ def decrypt_document(encrypted_doc):
     decrypted_doc = cipher_suite.decrypt(encrypted_doc).decode()
     return decrypted_doc
 
+import re, heapq
+
+def gpt3_summarize(document, num_sentences=3):
+    STOP = set("""a an the and or but if while of to in on at by for with about against
+    between into through during before after above below from up down out off over under
+    again further then once here there when where why how all any both each few more most
+    other some such no nor not only own same so than too very s t can will just don should
+    now is are was were be been being it its this that these those i you he she they we as
+    have has had do does did which who whom""".split())
+    text = re.sub(r'\s+', ' ', document).strip()
+    sents = [s.strip() for s in re.split(r'(?<=[.!?])\s+', text) if len(s.split()) > 3]
+    if not sents:
+        return text[:300]
+    freq = {}
+    for w in re.findall(r"[a-z']+", text.lower()):
+        if w not in STOP and len(w) > 2:
+            freq[w] = freq.get(w, 0) + 1
+    if not freq:
+        return " ".join(sents[:num_sentences])
+    peak = max(freq.values())
+    freq = {w: c / peak for w, c in freq.items()}
+    scores = {}
+    for i, s in enumerate(sents):
+        ws = re.findall(r"[a-z']+", s.lower())
+        if 4 <= len(ws) <= 45:
+            scores[i] = sum(freq.get(w, 0) for w in ws) / (len(ws) ** 0.5)
+    top = sorted(heapq.nlargest(num_sentences, scores, key=scores.get))
+    return " ".join(sents[i] for i in top)
 
 # GPT-3 Summarization Function
 # === Model Layer: GPT-3 Summarization Function using OpenAI API
 
 
-def gpt3_summarize(text):
-    print("Summarizing document using GPT-3...")
-    client = OpenAI()
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "please summarize the following text:"},
-            {"role": "user", "content": text},
-        ],
-        max_tokens=150,
-        temperature=0.7,
-    )
-    summary = response.choices[0].message.content
+#def gpt3_summarize(text):
+   # print("Summarizing document using GPT-3...")
+    #client = OpenAI()
+    #response = client.chat.completions.create(
+        #model="gpt-3.5-turbo",
+        #messages=[
+           # {"role": "system", "content": "please summarize the following text:"},
+           # {"role": "user", "content": text},
+        #],
+        #max_tokens=150,
+        #temperature=0.7,
+    #)
+    #summary = response.choices[0].message.content
     # summary = response.choices[0].text.strip()
-    return summary
+    #return summary
 
 
 # User login with token-based authentication (Application Layer)
@@ -223,8 +249,8 @@ async def main():
 
 
 # Run the simulation
-asyncio.run(main())
-#await main()
+#asyncio.run(main())
+await main()
 
 # Print feedback data for debugging (Loop to improve model later)
 cursor.execute("SELECT * FROM feedback")
