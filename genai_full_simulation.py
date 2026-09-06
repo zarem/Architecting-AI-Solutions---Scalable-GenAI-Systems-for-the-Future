@@ -249,8 +249,8 @@ async def main():
 
 
 # Run the simulation
-#asyncio.run(main())
-await main()
+asyncio.run(main())
+
 
 # Print feedback data for debugging (Loop to improve model later)
 cursor.execute("SELECT * FROM feedback")
